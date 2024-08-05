@@ -28,8 +28,7 @@ const update = (id, objectData) => {
   const request = axios.put(`${baseUrl}/${id}`, objectData);
 
   return request
-    .then((response) => response.data)
-    .catch((err) => console.log(err));
+    .then((response) => response.data);
 };
 
 export default {

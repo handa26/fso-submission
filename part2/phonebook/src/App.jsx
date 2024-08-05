@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import Notification from "./components/Notification.jsx";
 
 import personService from "./services/persons.js";
 
@@ -11,6 +12,8 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newPhoneNum, setNewPhoneNum] = useState("");
   const [filter, setFilter] = useState("");
+  const [message, setMessage] = useState(null);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     personService.getAll().then((response) => {
@@ -18,8 +21,8 @@ const App = () => {
     });
   }, []);
 
-  const filtered = persons.filter((person) =>
-    person.name.toLowerCase().includes(filter.toLowerCase())
+  const filtered = persons?.filter((person) =>
+    person?.name?.toLowerCase().includes(filter.toLowerCase())
   );
 
   const handleNameChange = (event) => {
@@ -58,7 +61,19 @@ const App = () => {
             );
             setNewName("");
             setNewPhoneNum("");
-          });
+          })
+          .catch(error => {
+            console.log("update error", error);
+            setMessage(`Information of ${newName} has already been removed from server`);
+            setIsError(true);
+            setNewName("");
+            setNewPhoneNum("");
+            setTimeout(() => {
+              setMessage(null);
+              setIsError(false);
+            }, 3000);
+            setPersons(persons.filter(person => person.id !== existingUser.id));
+          })
         console.log(person);
       }
     } else {
@@ -69,6 +84,10 @@ const App = () => {
 
       personService.create(nameObject).then((response) => {
         setPersons(persons.concat(response));
+        setMessage(`Added ${nameObject.name}`);
+        setTimeout(() => {
+          setMessage(null);
+        }, 4000);
         setNewName("");
         setNewPhoneNum("");
       });
@@ -88,6 +107,8 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
 
+      <Notification message={message} isError={isError} />
+
       <Filter filter={filter} handleFilter={handleFilter} />
 
       <h3>Add a new</h3>
@@ -102,7 +123,17 @@ const App = () => {
 
       <h3>Numbers</h3>
 
-      <Persons persons={filtered} onDelete={onDelete} />
+      <ul>
+        {filtered.map((person) => {
+          return (
+            <Persons
+              person={person}
+              key={person.id}
+              onDelete={() => onDelete(person)}
+            />
+          );
+        })}
+      </ul>
     </div>
   );
 };
