@@ -1,8 +1,11 @@
 const express = require("express");
+const morgan = require("morgan");
 
 const app = express();
 
 app.use(express.json());
+app.use(morgan("tiny"));
+app.use(morgan(":method :url :body"));
 
 let persons = [
   {
@@ -36,7 +39,11 @@ app.get("/", (request, response) => {
 });
 
 app.get("/info", (request, response) => {
-  response.send(`<p>Phonebook has info for ${persons.length} people <br/> ${new Date(8.64e15).toString()}</p>`);
+  response.send(
+    `<p>Phonebook has info for ${persons.length} people <br/> ${new Date(
+      8.64e15
+    ).toString()}</p>`
+  );
 });
 
 app.get("/api/persons", (request, response) => {
@@ -45,7 +52,7 @@ app.get("/api/persons", (request, response) => {
 
 app.get("/api/persons/:id", (request, response) => {
   const id = request.params.id;
-  const person = persons.find(person => person.id === id);
+  const person = persons.find((person) => person.id === id);
 
   if (person) {
     response.json(person);
@@ -56,17 +63,17 @@ app.get("/api/persons/:id", (request, response) => {
 
 app.post("/api/persons", (request, response) => {
   const body = request.body;
-  const existingName = persons.find(person => person.name === body.name);
+  const existingName = persons.find((person) => person.name === body.name);
 
   if (!body.name || !body.number) {
     return response.status(400).json({
-      error: "name or number is missing"
+      error: "name or number is missing",
     });
   }
 
   if (existingName) {
     return response.status(400).json({
-      error: "name must be unique"
+      error: "name must be unique",
     });
   }
 
@@ -76,13 +83,17 @@ app.post("/api/persons", (request, response) => {
     number: body.number,
   };
 
+  morgan.token("body", (req) => {
+    return JSON.stringify(req.body);
+  });
+
   persons = persons.concat(person);
   response.json(person);
 });
 
 app.delete("/api/persons/:id", (request, response) => {
   const id = request.params.id;
-  persons = persons.filter(person => person.id !== id);
+  persons = persons.filter((person) => person.id !== id);
 
   response.status(204).end();
 });
